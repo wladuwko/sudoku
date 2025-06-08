@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en" style="--tg-viewport-height: 100vh; --tg-viewport-stable-height: 100vh;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web App</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px; /* Отступы по краям экрана */
+            box-sizing: border-box;
+            background-color: #121212; /* Темный фон */
+            color: #ffffff; /* Светлый текст */
+        }
+
+        h1 {
+            margin-top: 20px;
+            color: #ffffff; /* Светлый текст */
+        }
+
+        .no-select {
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* IE/Edge */
+            user-select: none; /* Standard */
+        }
+
+        .difficulty-buttons-container {
+            background-color: #1e1e1e; /* Темный фон */
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .difficulty-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .difficulty-buttons button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #333; /* Темный фон кнопки */
+            color: #ffffff; /* Светлый текст кнопки */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .difficulty-buttons button:hover {
+            background-color: #444; /* Темнее при наведении */
+        }
+
+        #sudokuBoard {
+            display: none; /* Скрыть по умолчанию */
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 4px; /* Увеличенное расстояние между квадратами 3x3 */
+            width: 450px; /* Фиксированная ширина */
+            height: 450px; /* Фиксированная высота */
+            margin: 20px auto;
+            background-color: #1e1e1e; /* Темный фон доски */
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1); /* Светлая тень */
+        }
+
+        .sudoku-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 4px; /* Увеличенное расстояние между клетками внутри квадрата */
+            padding: 2px; /* Внутренний отступ для клеток */
+            border: none; /* Убираем обводку всего дива */
+        }
+
+        .sudoku-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%; /* Фиксированная высота */
+            position: relative;
+            border: 1px solid #444; /* Темная граница клеток */
+            font-size: 18px;
+            font-weight: bold;
+            background-color: #333; /* Темный фон клеток */
+            cursor: pointer;
+        }
+
+        .sudoku-cell.selected {
+            border: 2px solid #ffffff; /* Светлая граница для выбранной клетки */
+            box-sizing: border-box; /* Убедимся, что граница не увеличивает размер клетки */
+        }
+
+        .sudoku-cell span {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffffff; /* Светлый текст */
+        }
+
+        .sudoku-cell.highlighted {
+            background-color: #444; /* Более темный фон для выделенных клеток */
+        }
+
+        .input-buttons-container {
+            background-color: #1e1e1e; /* Темный фон */
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .input-buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* Две строки по 5 кнопок */
+            gap: 5px;
+        }
+
+        .input-buttons button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #333; /* Темный фон кнопки */
+            color: #ffffff; /* Светлый текст кнопки */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .input-buttons button:hover {
+            background-color: #444; /* Темнее при наведении */
+        }
+
+        .same-value {
+            background-color: #555; /* Цвет подсветки для ячеек с таким же значением */
+        }
+
+        .invalid-move span {
+            color: #ff0000; /* Красный цвет для текста */
+        }
+
+        .correct-move {
+            background-color: #90ee90; /* Зеленый цвет для правильных ходов */
+        }
+    </style>
+</head>
+<body>
+
+<div class="difficulty-buttons-container">
+
+<div class="difficulty-buttons">
+    <button id="topButton">Топ</button>
+    <a class="balance"></a>
+    <button id="settingsButton">Настройки</button>
+</div>
+</div>
+<div class="difficulty-buttons-container">
+
+    <div class="difficulty-buttons">
+        <button id="easyButton">Простой</button>
+        <button id="mediumButton">Средний</button>
+        <button id="hardButton">Сложный</button>
+    </div>
+</div>
+<div id="sudokuBoard">
+    <div class="sudoku-section" id="section1">
+        <div class="sudoku-cell" id="cell1"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell2"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell3"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell4"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell5"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell6"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell7"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell8"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell9"><span class="no-select"></span></div>
+    </div>
+    <div class="sudoku-section" id="section2">
+        <div class="sudoku-cell" id="cell10"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell11"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell12"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell13"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell14"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell15"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell16"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell17"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell18"><span class="no-select"></span></div>
+    </div>
+    <div class="sudoku-section" id="section3">
+        <div class="sudoku-cell" id="cell19"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell20"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell21"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell22"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell23"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell24"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell25"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell26"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell27"><span class="no-select"></span></div>
+    </div>
+    <div class="sudoku-section" id="section4">
+        <div class="sudoku-cell" id="cell28"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell29"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell30"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell31"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell32"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell33"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell34"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell35"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell36"><span class="no-select"></span></div>
+    </div>
+    <div class="sudoku-section" id="section5">
+        <div class="sudoku-cell" id="cell37"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell38"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell39"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell40"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell41"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell42"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell43"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell44"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell45"><span class="no-select"></span></div>
+    </div>
+    <div class="sudoku-section" id="section6">
+        <div class="sudoku-cell" id="cell46"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell47"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell48"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell49"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell50"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell51"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell52"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell53"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell54"><span class="no-select"></span></div>
+    </div>
+    <div class="sudoku-section" id="section7">
+        <div class="sudoku-cell" id="cell55"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell56"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell57"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell58"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell59"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell60"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell61"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell62"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell63"><span class="no-select"></span></div>
+    </div>
+    <div class="sudoku-section" id="section8">
+        <div class="sudoku-cell" id="cell64"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell65"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell66"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell67"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell68"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell69"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell70"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell71"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell72"><span class="no-select"></span></div>
+    </div>
+    <div class="sudoku-section" id="section9">
+        <div class="sudoku-cell" id="cell73"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell74"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell75"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell76"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell77"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell78"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell79"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell80"><span class="no-select"></span></div>
+        <div class="sudoku-cell" id="cell81"><span class="no-select"></span></div>
+    </div>
+</div>
+<div class="input-buttons-container" id="inputButtonsCont">
+    <div class="input-buttons" id="inputButtons" style="display: none;">
+        <button data-value="1">1</button>
+        <button data-value="2">2</button>
+        <button data-value="3">3</button>
+        <button data-value="4">4</button>
+        <button data-value="5">5</button>
+        <button data-value="6">6</button>
+        <button data-value="7">7</button>
+        <button data-value="8">8</button>
+        <button data-value="9">9</button>
+        <button data-value="X">X</button> <!-- Кнопка для стирания -->
+    </div>
+</div>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="//cdn.jsdelivr.net/npm/eruda"></script>
+<script>eruda.init()</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let tg = window.Telegram.WebApp;
+    let initData = tg.initData;
+    let userId = tg.initDataUnsafe.user.id;
+
+    console.log("Telegram WebApp initialized:", tg);
+    console.log("Init Data:", initData);
+    console.log("User ID:", userId);
+
+    // Отправка initData на верификацию (ВАЖНО: отправляем сразу после получения!)
+    fetch('/verify', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ initData: initData })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.valid) {
+            console.log('Данные проверены успешно');
+            // Продолжаем инициализацию приложения
+            initializeSudoku();
+        } else {
+            console.log('Ошибка проверки данных');
+            // Обрабатываем случай, когда данные не прошли проверку (например, показываем сообщение об ошибке)
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        // Обрабатываем ошибку отправки запроса
+    });
+
+    function initializeSudoku() {
+        const sudokuBoardElement = document.getElementById('sudokuBoard');
+        const inputButtonsElement = document.getElementById('inputButtons');
+        let selectedCell = null;
+        const inputButtonsContElement = document.getElementById('inputButtonsCont');
+        sudokuBoardElement.style.display = 'none';
+        inputButtonsContElement.style.display = 'none';
+
+        const buttons = {
+            easy: document.getElementById('easyButton'),
+            medium: document.getElementById('mediumButton'),
+            hard: document.getElementById('hardButton')
+        };
+
+        const difficulties = {
+            easy: 0,
+            medium: 40,
+            hard: 50
+        };
+
+        let initialBoard = []; // Сохраняем сгенерированную доску
+        let currentBoard = []; // Сохраняем текущее состояние доски
+        let highlightedValues = false; // Флаг, чтобы отслеживать, включено ли выделение одинаковых значений
+
+        Object.keys(buttons).forEach(difficulty => {
+            buttons[difficulty].addEventListener('click', function() {
+                const emptyCells = difficulties[difficulty];
+                fetch(`generate-sudoku?emptyCells=${emptyCells}&initData=${initData}&userId=${userId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok ' + response.statusText);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        initialBoard = data; // Сохраняем сгенерированную доску
+                        currentBoard = data.map(row => row.slice()); // Копируем данные для текущей доски
+                        displaySudoku(data);
+                        deselectCell();
+                        removeHighlighting(); // Убираем подсветку при перегенерации
+                        highlightedValues = false; // Сбрасываем флаг
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            });
+        });
+
+        function displaySudoku(board) {
+            const cells = document.querySelectorAll('.sudoku-cell');
+            cells.forEach((cell, index) => {
+                const row = Math.floor(index / 9);
+                const col = index % 9;
+                const value = board[row][col];
+                const span = cell.querySelector('span');
+                span.textContent = value === 0 ? '' : value;
+
+                cell.classList.remove('given'); // Убираем класс given
+                cell.style.cursor = 'pointer';  // Возвращаем курсор
+
+                if (value !== 0) {
+                    cell.classList.add('given');
+                    cell.style.cursor = 'pointer';
+                }
+            });
+            sudokuBoardElement.style.display = 'grid';
+        }
+
+        function setSudokuBoardSize() {
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const boardSize = Math.min(viewportWidth, viewportHeight) * 0.8;
+            sudokuBoardElement.style.width = `${boardSize}px`;
+            sudokuBoardElement.style.height = `${boardSize}px`;
+        }
+
+        setSudokuBoardSize();
+
+        document.querySelectorAll('.sudoku-cell').forEach((cell, index) => {
+            cell.addEventListener('click', function() {
+                const row = Math.floor(index / 9);
+                const col = index % 9;
+
+                // Если ячейка "данная" или правильно введенная, подсвечиваем все ячейки с таким же значением и выходим
+                if (initialBoard[row][col] !== 0 || (currentBoard[row][col] !== 0 && !cell.classList.contains('invalid-move'))) {
+                    removeHighlighting(); // Убираем подсветку выбранной ячейки
+                    highlightSameValue(currentBoard[row][col]);
+                    highlightedValues = true; // Устанавливаем флаг, что подсветка включена
+                    return;
+                }
+
+                removeHighlighting(); // Убираем подсветку выбранной ячейки
+
+                if (selectedCell) {
+                    selectedCell.classList.remove('selected');
+                }
+                selectedCell = this;
+                selectedCell.classList.add('selected');
+                highlightRowAndColumn(this);
+                inputButtonsElement.style.display = 'grid';
+            });
+        });
+
+        inputButtonsElement.addEventListener('click', function(event) {
+            if (event.target.tagName === 'BUTTON') {
+                const value = event.target.dataset.value; // Получаем значение из data-value
+                console.log("Value from data-value:", value); // Добавлена эта строка
+                if (selectedCell) {
+                    if (value === 'X') {
+                        // Стираем цифру
+                        selectedCell.querySelector('span').textContent = '';
+                        // Обновляем currentBoard
+                        const index = Array.from(document.querySelectorAll('.sudoku-cell')).indexOf(selectedCell);
+                        const row = Math.floor(index / 9);
+                        const col = index % 9;
+                        currentBoard[row][col] = 0;
+                    } else {
+                        selectedCell.querySelector('span').textContent = value;
+                        // Обновляем currentBoard
+                        const index = Array.from(document.querySelectorAll('.sudoku-cell')).indexOf(selectedCell);
+                        const row = Math.floor(index / 9);
+                        const col = index % 9;
+                        currentBoard[row][col] = parseInt(value);
+
+                        // Отправляем ход на валидацию
+                        validateMove(row, col, parseInt(value));
+                    }
+
+                    inputButtonsElement.style.display = 'none';
+                    selectedCell.classList.remove('selected');
+                    removeHighlighting();
+                    selectedCell = null;
+                }
+            }
+        });
+
+        function validateMove(row, col, value) {
+            fetch(`validate-move?row=${row}&col=${col}&value=${value}&initData=${initData}&userId=${userId}`, {
+                method: 'POST', // Явное указание метода POST
+                headers: {
+                    'Content-Type': 'application/json' // Указываем тип контента
+                },
+                body: JSON.stringify({}) // Отправляем пустой JSON
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const cellIndex = row * 9 + col;
+                const cell = document.querySelectorAll('.sudoku-cell')[cellIndex];
+                const span = cell.querySelector('span');
+
+                if (data) {
+                    // Ход верен
+                    console.log("Ход верен!");
+                    cell.classList.remove('invalid-move'); // Убираем класс для неверных ходов
+                } else {
+                    // Ход не верен
+                    console.log("Ход не верен!");
+                    cell.classList.add('invalid-move'); // Добавляем класс для подсветки
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        window.addEventListener('resize', setSudokuBoardSize);
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                deselectCell();
+                removeHighlighting(); // Убираем подсветку одинаковых значений
+                highlightedValues = false; // Сбрасываем флаг
+            }
+        });
+
+        function deselectCell() {
+            if (selectedCell) {
+                selectedCell.classList.remove('selected');
+                removeHighlighting();
+                selectedCell = null;
+                inputButtonsElement.style.display = 'none';
+            }
+        }
+
+        function highlightRowAndColumn(cell) {
+            const cells = document.querySelectorAll('.sudoku-cell');
+            const cellIndex = Array.from(cells).indexOf(cell);
+            inputButtonsContElement.style.display = 'grid';
+            const sectionIndex = Math.floor(cellIndex / 9);
+            const cellInSectionIndex = cellIndex % 9;
+
+            const row = Math.floor(sectionIndex / 3) * 3 + Math.floor(cellInSectionIndex / 3);
+            const col = (sectionIndex % 3) * 3 + (cellInSectionIndex % 3);
+
+            for (let i = 0; i < 9; i++) {
+                const rowIndex = Math.floor(row / 3) * 3 + Math.floor(i / 3);
+                const colIndex = (row % 3) * 3 + (i % 3);
+                const index = rowIndex * 9 + colIndex;
+                cells[index].classList.add('highlighted');
+            }
+
+            for (let i = 0; i < 9; i++) {
+                const rowIndex = Math.floor(i / 3) * 3 + Math.floor(col / 3);
+                const colIndex = (i % 3) * 3 + (col % 3);
+                const index = rowIndex * 9 + colIndex;
+                cells[index].classList.add('highlighted');
+            }
+        }
+
+        function removeHighlighting() {
+            const cells = document.querySelectorAll('.sudoku-cell');
+            inputButtonsContElement.style.display = 'none';
+            cells.forEach(cell => {
+                cell.classList.remove('highlighted');
+                cell.classList.remove('same-value');
+                cell.classList.remove('selected'); // Убираем класс selected
+            });
+            if(selectedCell) {
+                selectedCell = null;
+            }
+        }
+
+        function highlightSameValue(value) {
+            const cells = document.querySelectorAll('.sudoku-cell');
+            removeHighlighting(); // Сначала убираем всю подсветку
+            cells.forEach((cell, index) => {
+                const row = Math.floor(index / 9);
+                const col = index % 9;
+                if (currentBoard[row][col] === value && !cell.classList.contains('invalid-move')) {
+                    cell.classList.add('same-value');
+                }
+            });
+        }
+    }
+});
+    </script>
+</body>
+</html>
