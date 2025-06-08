@@ -290,15 +290,6 @@
 
 let url = "https://11wn2k-79-139-134-245.ru.tuna.am";
 
-document.addEventListener('DOMContentLoaded', function() {
-    let tg = window.Telegram.WebApp;
-    let initData = tg.initData;
-    let userId = tg.initDataUnsafe.user.id;
-
-    console.log("Telegram WebApp initialized:", tg);
-    console.log("Init Data:", initData);
-    console.log("User ID:", userId);
-
     // Отправка initData на верификацию (ВАЖНО: отправляем сразу после получения!)
     document.addEventListener('DOMContentLoaded', function() {
     // Логируем доступность window.Telegram, чтобы проверить, загружен ли SDK
