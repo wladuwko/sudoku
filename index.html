@@ -56,18 +56,18 @@
         }
 
         #sudokuBoard {
-            display: none; /* Скрыть по умолчанию */
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            gap: 4px; /* Увеличенное расстояние между квадратами 3x3 */
-            width: 450px; /* Фиксированная ширина */
-            height: 450px; /* Фиксированная высота */
-            margin: 20px auto;
-            background-color: #1e1e1e; /* Темный фон доски */
-            padding: 10px;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1); /* Светлая тень */
-        }
+    display: none; /* Скрыть по умолчанию */
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 2px; /* Уменьшаем расстояние между квадратами 3x3 */
+    width: 300px; /* Фиксированная ширина -  УМЕНЬШИТЬ! */
+    height: 300px; /* Фиксированная высота - УМЕНЬШИТЬ! */
+    margin: 20px auto;
+    background-color: #1e1e1e; /* Темный фон доски */
+    padding: 5px; /* Уменьшаем отступы */
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1); /* Светлая тень */
+}
 
         .sudoku-section {
             display: grid;
