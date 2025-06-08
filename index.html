@@ -300,6 +300,46 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("User ID:", userId);
 
     // Отправка initData на верификацию (ВАЖНО: отправляем сразу после получения!)
+    document.addEventListener('DOMContentLoaded', function() {
+    // Логируем доступность window.Telegram, чтобы проверить, загружен ли SDK
+    console.log("window.Telegram:", window.Telegram);
+
+    // Проверяем существование window.Telegram и его свойства WebApp
+    let tg = window.Telegram && window.Telegram.WebApp;
+
+    // Логируем значение tg после инициализации
+    console.log("Telegram WebApp object (tg):", tg);
+
+    if (!tg) {
+        console.error("Telegram WebApp is not available.  Are you running this in the Telegram WebApp environment?");
+        return; // Прерываем выполнение, если Telegram WebApp недоступен
+    }
+
+    let initData = tg.initData;
+    // Логируем initData
+    console.log("Init Data:", initData);
+
+    // Безопасный доступ к ID пользователя с проверками на null и undefined
+    let userId = tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id;
+
+    // Логируем userId после попытки его получения
+    console.log("User ID:", userId);
+
+    if (userId) {
+        console.log("User ID successfully retrieved:", userId);
+    } else {
+        console.warn("Unable to retrieve User ID. initDataUnsafe or user object may be missing.");
+        // Можно установить значение по умолчанию или пропустить дальнейшие действия
+        // userId = "default_user_id"; // Пример установки значения по умолчанию
+    }
+
+    // Проверяем, определен ли url
+    if (typeof url === 'undefined') {
+        console.error("The variable 'url' is not defined.  You need to define the base URL for your API.");
+        return; // Прерываем выполнение, если url не определен
+    }
+
+    // Отправка initData на верификацию (ВАЖНО: отправляем сразу после получения!)
     fetch(url + '/verify', {
         method: 'POST',
         headers: {
@@ -307,21 +347,34 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         body: JSON.stringify({ initData: initData })
     })
-    .then(response => response.json())
+    .then(response => {
+        // Логируем ответ сервера
+        console.log("Server response:", response);
+        return response.json();
+    })
     .then(data => {
-        if (data.valid) {
+        // Логируем полученные данные
+        console.log("Data from server:", data);
+
+        if (data && data.valid) { // Проверяем существование data и его свойства valid
             console.log('Данные проверены успешно');
             // Продолжаем инициализацию приложения
             initializeSudoku();
         } else {
             console.log('Ошибка проверки данных');
             // Обрабатываем случай, когда данные не прошли проверку (например, показываем сообщение об ошибке)
+            if (data) {
+                console.log("Server returned invalid data:", data);
+            } else {
+                console.log("Server returned no data.");
+            }
         }
     })
     .catch(error => {
-        console.error('Ошибка:', error);
+        console.error('Ошибка при отправке или обработке ответа:', error);
         // Обрабатываем ошибку отправки запроса
     });
+});
 
     function initializeSudoku() {
         const sudokuBoardElement = document.getElementById('sudokuBoard');
