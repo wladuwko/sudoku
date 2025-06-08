@@ -287,6 +287,9 @@
 <script src="//cdn.jsdelivr.net/npm/eruda"></script>
 <script>eruda.init()</script>
 <script>
+
+let url = "";
+
 document.addEventListener('DOMContentLoaded', function() {
     let tg = window.Telegram.WebApp;
     let initData = tg.initData;
@@ -297,7 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("User ID:", userId);
 
     // Отправка initData на верификацию (ВАЖНО: отправляем сразу после получения!)
-    fetch('/verify', {
+    fetch(url + '/verify', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -347,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
         Object.keys(buttons).forEach(difficulty => {
             buttons[difficulty].addEventListener('click', function() {
                 const emptyCells = difficulties[difficulty];
-                fetch(`generate-sudoku?emptyCells=${emptyCells}&initData=${initData}&userId=${userId}`)
+                fetch(url + `generate-sudoku?emptyCells=${emptyCells}&initData=${initData}&userId=${userId}`)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error('Network response was not ok ' + response.statusText);
@@ -405,7 +408,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Если ячейка "данная" или правильно введенная, подсвечиваем все ячейки с таким же значением и выходим
                 if (initialBoard[row][col] !== 0 || (currentBoard[row][col] !== 0 && !cell.classList.contains('invalid-move'))) {
-                    removeHighlighting(); // Убираем подсветку выбранной ячейки
+                    removeHighlighting(); // Убираем подсветку выбранной ячейкиu
                     highlightSameValue(currentBoard[row][col]);
                     highlightedValues = true; // Устанавливаем флаг, что подсветка включена
                     return;
@@ -457,7 +460,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         function validateMove(row, col, value) {
-            fetch(`validate-move?row=${row}&col=${col}&value=${value}&initData=${initData}&userId=${userId}`, {
+            fetch(url + `validate-move?row=${row}&col=${col}&value=${value}&initData=${initData}&userId=${userId}`, {
                 method: 'POST', // Явное указание метода POST
                 headers: {
                     'Content-Type': 'application/json' // Указываем тип контента
