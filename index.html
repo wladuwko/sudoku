@@ -287,90 +287,112 @@
 <script src="//cdn.jsdelivr.net/npm/eruda"></script>
 <script>eruda.init()</script>
 <script>
-    let url = 'https://nanvqy-79-139-134-245.ru.tuna.am';
+let url = 'https://nanvqy-79-139-134-245.ru.tuna.am';
+
+// Функция для обработки ответов fetch и логирования
+async function handleFetchResponse(response, url) {
+    console.log(`[FETCH] URL: ${url}, Status: ${response.status}, Status Text: ${response.statusText}`);
+    if (!response.ok) {
+        console.error(`[FETCH ERROR] URL: ${url}, Status: ${response.status}, Status Text: ${response.statusText}`);
+        throw new Error(`Network response was not ok: ${response.status} ${response.statusText} for URL: ${url}`);
+    }
+    try {
+        const data = await response.json();
+        console.log(`[FETCH] URL: ${url}, Response Data:`, data);
+        return data;
+    } catch (error) {
+        console.error(`[JSON PARSE ERROR] URL: ${url}, Error:`, error);
+        throw new Error(`Error parsing JSON response from URL: ${url}. Error: ${error}`);
+    }
+}
+
+// Отправка initData на верификацию (ВАЖНО: отправляем сразу после получения!)
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("[DOM] DOMContentLoaded event fired.");
+
+    // Логируем доступность window.Telegram, чтобы проверить, загружен ли SDK
+    console.log("window.Telegram:", window.Telegram);
+
+    // Проверяем существование window.Telegram и его свойства WebApp
+    let tg = window.Telegram && window.Telegram.WebApp;
+
+    // Логируем значение tg после инициализации
+    console.log("Telegram WebApp object (tg):", tg);
+
+    if (!tg) {
+        console.error("Telegram WebApp is not available.  Are you running this in the Telegram WebApp environment?");
+        return; // Прерываем выполнение, если Telegram WebApp недоступен
+    }
+
+    let initData = tg.initData;
+    // Логируем initData
+    console.log("Init Data:", initData);
+
+    // Безопасный доступ к ID пользователя с проверками на null и undefined
+    let userId = tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id;
+
+    // Логируем userId после попытки его получения
+    console.log("User ID:", userId);
+
+    if (userId) {
+        console.log("User ID successfully retrieved:", userId);
+    } else {
+        console.warn("Unable to retrieve User ID. initDataUnsafe or user object may be missing.");
+        // Можно установить значение по умолчанию или пропустить дальнейшие действия
+        // userId = "default_user_id"; // Пример установки значения по умолчанию
+    }
+
+    // Проверяем, определен ли url
+    if (typeof url === 'undefined') {
+        console.error("The variable 'url' is not defined.  You need to define the base URL for your API.");
+        return; // Прерываем выполнение, если url не определен
+    }
 
     // Отправка initData на верификацию (ВАЖНО: отправляем сразу после получения!)
-    document.addEventListener('DOMContentLoaded', function() {
-        // Логируем доступность window.Telegram, чтобы проверить, загружен ли SDK
-        console.log("window.Telegram:", window.Telegram);
-
-        // Проверяем существование window.Telegram и его свойства WebApp
-        let tg = window.Telegram && window.Telegram.WebApp;
-
-        // Логируем значение tg после инициализации
-        console.log("Telegram WebApp object (tg):", tg);
-
-        if (!tg) {
-            console.error("Telegram WebApp is not available.  Are you running this in the Telegram WebApp environment?");
-            return; // Прерываем выполнение, если Telegram WebApp недоступен
-        }
-
-        let initData = tg.initData;
-        // Логируем initData
-        console.log("Init Data:", initData);
-
-        // Безопасный доступ к ID пользователя с проверками на null и undefined
-        let userId = tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id;
-
-        // Логируем userId после попытки его получения
-        console.log("User ID:", userId);
-
-        if (userId) {
-            console.log("User ID successfully retrieved:", userId);
-        } else {
-            console.warn("Unable to retrieve User ID. initDataUnsafe or user object may be missing.");
-            // Можно установить значение по умолчанию или пропустить дальнейшие действия
-            // userId = "default_user_id"; // Пример установки значения по умолчанию
-        }
-
-        // Проверяем, определен ли url
-        if (typeof url === 'undefined') {
-            console.error("The variable 'url' is not defined.  You need to define the base URL for your API.");
-            return; // Прерываем выполнение, если url не определен
-        }
-
-        // Отправка initData на верификацию (ВАЖНО: отправляем сразу после получения!)
-        fetch(url + '/verify', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    initData: initData
-                })
+    const verifyUrl = url + '/verify';
+    console.log(`[FETCH] Sending request to: ${verifyUrl}`);
+    fetch(verifyUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                initData: initData
             })
-            .then(response => {
-                // Логируем ответ сервера
-                console.log("Server response:", response);
-                return response.json();
-            })
-            .then(data => {
-                // Логируем полученные данные
-                console.log("Data from server:", data);
+        })
+        .then(response => handleFetchResponse(response, verifyUrl))
+        .then(data => {
+            // Логируем полученные данные
+            console.log("Data from server:", data);
 
-                if (data && data.valid) { // Проверяем существование data и его свойства valid
-                    console.log('Данные проверены успешно');
-                    // Продолжаем инициализацию приложения
-                    initializeSudoku();
+            if (data && data.valid) { // Проверяем существование data и его свойства valid
+                console.log('Данные проверены успешно');
+                // Продолжаем инициализацию приложения
+                initializeSudoku();
+            } else {
+                console.log('Ошибка проверки данных');
+                // Обрабатываем случай, когда данные не прошли проверку (например, показываем сообщение об ошибке)
+                if (data) {
+                    console.log("Server returned invalid data:", data);
                 } else {
-                    console.log('Ошибка проверки данных');
-                    // Обрабатываем случай, когда данные не прошли проверку (например, показываем сообщение об ошибке)
-                    if (data) {
-                        console.log("Server returned invalid data:", data);
-                    } else {
-                        console.log("Server returned no data.");
-                    }
+                    console.log("Server returned no data.");
                 }
-            })
-            .catch(error => {
-                console.error('Ошибка при отправке или обработке ответа:', error);
-                // Обрабатываем ошибку отправки запроса
-            });
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при отправке или обработке ответа:', error);
+            // Обрабатываем ошибку отправки запроса
+        });
 
 
-        function initializeSudoku() {
+    function initializeSudoku() {
+        console.log("[initializeSudoku] Function called.");
+        try {
             const sudokuBoardElement = document.getElementById('sudokuBoard');
+            console.log("[initializeSudoku] sudokuBoardElement:", sudokuBoardElement);
             const inputButtonsElement = document.getElementById('inputButtons');
+            console.log("[initializeSudoku] inputButtonsElement:", inputButtonsElement);
+
             let selectedCell = null;
             const inputButtonsContElement = document.getElementById('inputButtonsCont');
             sudokuBoardElement.style.display = 'none';
@@ -394,14 +416,12 @@
 
             Object.keys(buttons).forEach(difficulty => {
                 buttons[difficulty].addEventListener('click', function() {
+                    console.log(`[Button Click] Difficulty: ${difficulty}`);
                     const emptyCells = difficulties[difficulty];
-                    fetch(url + `/generate-sudoku?emptyCells=${emptyCells}&initData=${initData}&userId=${userId}`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok ' + response.statusText);
-                            }
-                            return response.json();
-                        })
+                    const generateSudokuUrl = `${url}/generate-sudoku?emptyCells=${emptyCells}&initData=${initData}&userId=${userId}`;
+                    console.log(`[FETCH] Sending request to: ${generateSudokuUrl}`);
+                    fetch(generateSudokuUrl)
+                        .then(response => handleFetchResponse(response, generateSudokuUrl))
                         .then(data => {
                             initialBoard = data; // Сохраняем сгенерированную доску
                             currentBoard = data.map(row => row.slice()); // Копируем данные для текущей доски
@@ -417,6 +437,7 @@
             });
 
             function displaySudoku(board) {
+                console.log("[displaySudoku] Function called with board:", board);
                 const cells = document.querySelectorAll('.sudoku-cell');
                 cells.forEach((cell, index) => {
                     const row = Math.floor(index / 9);
@@ -437,6 +458,7 @@
             }
 
             function setSudokuBoardSize() {
+                console.log("[setSudokuBoardSize] Function called.");
                 const viewportWidth = window.innerWidth;
                 const viewportHeight = window.innerHeight;
                 const boardSize = Math.min(viewportWidth, viewportHeight) * 0.8;
@@ -450,6 +472,7 @@
                 cell.addEventListener('click', function() {
                     const row = Math.floor(index / 9);
                     const col = index % 9;
+                    console.log(`[Sudoku Cell Click] Row: ${row}, Col: ${col}, Value: ${currentBoard[row][col]}`);
 
                     // Если ячейка "данная" или правильно введенная, подсвечиваем все ячейки с таким же значением и выходим
                     if (initialBoard[row][col] !== 0 || (currentBoard[row][col] !== 0 && !cell.classList.contains('invalid-move'))) {
@@ -484,6 +507,7 @@
                             const row = Math.floor(index / 9);
                             const col = index % 9;
                             currentBoard[row][col] = 0;
+                            console.log(`[Input Button Click] Clear cell at Row: ${row}, Col: ${col}`);
                         } else {
                             selectedCell.querySelector('span').textContent = value;
                             // Обновляем currentBoard
@@ -494,6 +518,7 @@
 
                             // Отправляем ход на валидацию
                             validateMove(row, col, parseInt(value));
+                            console.log(`[Input Button Click] Set cell at Row: ${row}, Col: ${col} to Value: ${value}`);
                         }
 
                         inputButtonsElement.style.display = 'none';
@@ -505,19 +530,18 @@
             });
 
             function validateMove(row, col, value) {
-                fetch(url + `/validate-move?row=${row}&col=${col}&value=${value}&initData=${initData}&userId=${userId}`, {
+                const validateMoveUrl = `${url}/validate-move?row=${row}&col=${col}&value=${value}&initData=${initData}&userId=${userId}`;
+                console.log(`[validateMove] Called for Row: ${row}, Col: ${col}, Value: ${value}`);
+                console.log(`[FETCH] Sending request to: ${validateMoveUrl}`);
+
+                fetch(validateMoveUrl, {
                         method: 'POST', // Явное указание метода POST
                         headers: {
                             'Content-Type': 'application/json' // Указываем тип контента
                         },
                         body: JSON.stringify({}) // Отправляем пустой JSON
                     })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok ' + response.statusText);
-                        }
-                        return response.json();
-                    })
+                    .then(response => handleFetchResponse(response, validateMoveUrl))
                     .then(data => {
                         const cellIndex = row * 9 + col;
                         const cell = document.querySelectorAll('.sudoku-cell')[cellIndex];
@@ -606,8 +630,11 @@
                     }
                 });
             }
+        } catch (error) {
+            console.error("[initializeSudoku] Error in initializeSudoku:", error);
         }
-    });
+    }
+});
 </script>
 </body>
 </html>
